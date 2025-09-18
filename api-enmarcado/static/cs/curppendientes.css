@@ -1,0 +1,374 @@
+:root {
+    /* Colores modo claro */
+    --bg-primary: #f8f9fa;
+    --bg-secondary: #ffffff;
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --border-color: #dee2e6;
+    --card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --card-hover-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    --navbar-bg: #212529;
+    --navbar-text: #ffffff;
+    --input-bg: #ffffff;
+    --input-border: #ced4da;
+    --modal-bg: #ffffff;
+    --dropdown-bg: #ffffff;
+}
+
+[data-theme="dark"] {
+    /* Colores modo oscuro */
+    --bg-primary: #1a1d20;
+    --bg-secondary: #2d3339;
+    --text-primary: #ffffff;
+    --text-secondary: #adb5bd;
+    --border-color: #495057;
+    --card-shadow: 0 0.125rem 0.25rem rgba(255, 255, 255, 0.1);
+    --card-hover-shadow: 0 0.5rem 1rem rgba(255, 255, 255, 0.2);
+    --navbar-bg: #000000;
+    --navbar-text: #ffffff;
+    --input-bg: #343a40;
+    --input-border: #495057;
+    --modal-bg: #2d3339;
+    --dropdown-bg: #343a40;
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Navbar */
+.navbar {
+    background-color: var(--navbar-bg) !important;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    color: var(--navbar-text) !important;
+}
+
+.navbar-text {
+    color: var(--navbar-text) !important;
+}
+
+/* Theme Toggle */
+.theme-toggle {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.theme-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.theme-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.theme-slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .theme-slider {
+    background-color: #2196F3;
+}
+
+input:checked + .theme-slider:before {
+    transform: translateX(26px);
+}
+
+.theme-slider .fa-sun,
+.theme-slider .fa-moon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: #fff;
+}
+
+.theme-slider .fa-sun {
+    left: 8px;
+}
+
+.theme-slider .fa-moon {
+    right: 8px;
+}
+
+/* Cards */
+.card {
+    background-color: var(--bg-secondary);
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--card-hover-shadow);
+}
+
+.curp-card {
+    border-left: 4px solid #dc3545;
+    background: linear-gradient(90deg, #fff5f5 0%, var(--bg-secondary) 100%);
+    margin-bottom: 1rem;
+}
+
+[data-theme="dark"] .curp-card {
+    background: linear-gradient(90deg, #2d1b1b 0%, var(--bg-secondary) 100%);
+}
+
+.curp-card.con-marco {
+    border-left-color: #fd7e14;
+    background: linear-gradient(90deg, #fff4e6 0%, var(--bg-secondary) 100%);
+}
+
+[data-theme="dark"] .curp-card.con-marco {
+    background: linear-gradient(90deg, #2d251b 0%, var(--bg-secondary) 100%);
+}
+
+.curp-card.grupo-auto {
+    border-left-color: #6f42c1;
+    background: linear-gradient(90deg, #f8f5ff 0%, var(--bg-secondary) 100%);
+}
+
+[data-theme="dark"] .curp-card.grupo-auto {
+    background: linear-gradient(90deg, #251e2d 0%, var(--bg-secondary) 100%);
+}
+
+/* Checkbox personalizado */
+.curp-checkbox {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #0d6efd;
+}
+
+.curp-card.selected {
+    border-left-width: 6px;
+    background: linear-gradient(90deg, #e3f2fd 0%, var(--bg-secondary) 100%);
+}
+
+[data-theme="dark"] .curp-card.selected {
+    background: linear-gradient(90deg, #1a2332 0%, var(--bg-secondary) 100%);
+}
+
+/* Elementos de tiempo */
+.tiempo-transcurrido {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.tiempo-critico {
+    color: #dc3545;
+}
+
+.tiempo-moderado {
+    color: #fd7e14;
+}
+
+.tiempo-normal {
+    color: #28a745;
+}
+
+/* Badges */
+.badge-tipo-acta {
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.5rem 0.75rem;
+}
+
+.badge-tipo-acta.nacimiento {
+    background-color: #6c757d !important;
+    color: white;
+}
+
+.badge-tipo-acta.matrimonio {
+    background-color: #e91e63 !important;
+    color: white;
+}
+
+.badge-tipo-acta.divorcio {
+    background-color: #6f42c1 !important;
+    color: white;
+}
+
+.badge-tipo-acta.defuncion {
+    background-color: #28a745 !important;
+    color: white;
+}
+
+/* Header de estadísticas */
+.stats-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Botones */
+.btn-eliminar {
+    background: linear-gradient(45deg, #dc3545, #c82333);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-eliminar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+    color: white;
+}
+
+.btn-limpiar {
+    background: linear-gradient(45deg, #6f42c1, #5a32a3);
+    border: none;
+    color: white;
+}
+
+.btn-limpiar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(111, 66, 193, 0.3);
+    color: white;
+}
+
+.btn-eliminar-lote {
+    background: linear-gradient(45deg, #dc3545, #c82333);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-eliminar-lote:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+    color: white;
+}
+
+.btn-eliminar-lote:disabled {
+    opacity: 0.5;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Texto y elementos */
+.identificador-text {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.remitente-info {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.intentos-badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Contenedores */
+.filtros-container {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--card-shadow);
+}
+
+.acciones-lote {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--card-shadow);
+}
+
+.spinner-container {
+    text-align: center;
+    padding: 3rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+/* Forms en modo oscuro */
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+    background-color: var(--input-bg);
+    border-color: #86b7fe;
+    color: var(--text-primary);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: var(--text-secondary);
+}
+
+/* Modal en modo oscuro */
+[data-theme="dark"] .modal-content {
+    background-color: var(--modal-bg);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .modal-header {
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .modal-footer {
+    border-top-color: var(--border-color);
+}
+
+/* Toast en modo oscuro */
+[data-theme="dark"] .toast {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+/* Contador de seleccionados */
+.contador-seleccionados {
+    font-weight: 600;
+    color: #0d6efd;
+}
