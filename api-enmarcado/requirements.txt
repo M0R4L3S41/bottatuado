@@ -1,0 +1,7 @@
+Flask
+PyMuPDF
+qrcode
+Pillow
+pytz
+python-barcode
+Werkzeug
