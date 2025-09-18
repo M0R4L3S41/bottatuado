@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - Bot WhatsApp</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .status-running {
+            background-color: #28a745;
+            box-shadow: 0 0 10px #28a745;
+        }
+
+        .status-stopped {
+            background-color: #dc3545;
+        }
+
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            transition: transform 0.2s;
+        }
+
+        .log-container {
+            height: 400px;
+            overflow-y: auto;
+            background: #1e1e1e;
+            color: #f8f9fa;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+
+        .log-entry {
+            margin-bottom: 0.5rem;
+        }
+
+        .log-error {
+            color: #ff6b6b;
+        }
+
+        .log-warning {
+            color: #feca57;
+        }
+
+        .log-success {
+            color: #48dbfb;
+        }
+
+        .log-info {
+            color: #f8f9fa;
+        }
+
+        .pending-item {
+            border-left: 4px solid #ffc107;
+            background: linear-gradient(90deg, #fff3cd 0%, #ffffff 100%);
+        }
+
+        .authorized-item {
+            border-left: 4px solid #28a745;
+            background: linear-gradient(90deg, #d4edda 0%, #ffffff 100%);
+        }
+
+        .admin-item {
+            border-left: 4px solid #6f42c1;
+            background: linear-gradient(90deg, #e2d9f3 0%, #ffffff 100%);
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .nav-pills .nav-link.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+
+        .btn-authorize {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            border: none;
+        }
+
+        .btn-revoke {
+            background: linear-gradient(45deg, #dc3545, #fd7e14);
+            border: none;
+        }
+
+        .btn-add-admin {
+            background: linear-gradient(45deg, #6f42c1, #6610f2);
+            border: none;
+        }
+
+        .btn-remove-admin {
+            background: linear-gradient(45deg, #e83e8c, #fd7e14);
+            border: none;
+        }
+
+        .authorized-item {
+            transition: all 0.3s ease;
+        }
+
+        .authorized-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-select-sm {
+            font-size: 0.8rem;
+        }
+
+        .form-label.small {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: #6c757d;
+        }
+
+        /* Indicadores visuales para configuración especial */
+        .authorized-item[data-enmarcado="true"] {
+            border-left-color: #17a2b8 !important;
+        }
+
+        .authorized-item[data-api="true"] {
+            border-right: 4px solid #ffc107;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-robot"></i> Panel Admin Bot WhatsApp
+            </a>
+            <div class="navbar-nav ms-auto">
+                <button class="btn btn-outline-light btn-sm" onclick="refreshAll()">
+                    <i class="fas fa-sync-alt"></i> Actualizar Todo
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Navigation Pills -->
+        <ul class="nav nav-pills mb-4 justify-content-center">
+            <li class="nav-item">
+                <a class="nav-link active" href="#" onclick="showSection('dashboard')">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showSection('statistics')">
+                    <i class="fas fa-chart-bar"></i> Estadísticas
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showSection('administrators')">
+                    <i class="fas fa-user-shield"></i> Administradores
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showSection('authorized')">
+                    <i class="fas fa-check-circle"></i> Autorizados
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showSection('pending')">
+                    <i class="fas fa-clock"></i> Pendientes
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showSection('logs')">
+                    <i class="fas fa-file-alt"></i> Logs
+                </a>
+            </li>
+        </ul>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="section">
+            <div class="row">
+                <!-- Estado del Sistema -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-server"></i> Estado del Sistema</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <span class="status-indicator" id="flask-status"></span>
+                                    <strong>Flask API</strong>
+                                    <div class="small text-muted" id="flask-details">Verificando...</div>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <span class="status-indicator" id="whatsapp-status"></span>
+                                    <strong>Bot WhatsApp</strong>
+                                    <div class="small text-muted" id="whatsapp-details">Verificando...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estadísticas Rápidas -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100 stats-card">
+                        <div class="card-body text-center">
+                            <h5 class="card-title"><i class="fas fa-chart-pie"></i> Resumen General</h5>
+                            <div class="row">
+                                <div class="col-6">
+                                    <h2 id="total-docs">0</h2>
+                                    <small>Documentos Procesados</small>
+                                </div>
+                                <div class="col-6">
+                                    <h2 id="total-users">0</h2>
+                                    <small>Usuarios Activos</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información del Sistema -->
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Información del Sistema</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row" id="system-info">
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <h6>CPU</h6>
+                                        <div class="progress">
+                                            <div class="progress-bar" id="cpu-bar" style="width: 0%"></div>
+                                        </div>
+                                        <small id="cpu-text">0%</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <h6>Memoria</h6>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-warning" id="memory-bar" style="width: 0%">
+                                            </div>
+                                        </div>
+                                        <small id="memory-text">0%</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <h6>Usuarios Autorizados</h6>
+                                        <h4 id="auth-users" class="text-success">0</h4>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <h6>Grupos Autorizados</h6>
+                                        <h4 id="auth-groups" class="text-primary">0</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div id="statistics" class="section" style="display: none;">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Estadísticas Detalladas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Usuario/Grupo</th>
+                                    <th>Tipo</th>
+                                    <th>Documentos</th>
+                                </tr>
+                            </thead>
+                            <tbody id="statistics-table">
+                                <tr>
+                                    <td colspan="4" class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Cargando...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Administrators Section -->
+        <div id="administrators" class="section" style="display: none;">
+            <div class="row">
+                <div class="col-lg-8 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-purple text-white d-flex justify-content-between align-items-center"
+                            style="background: linear-gradient(45deg, #6f42c1, #6610f2) !important;">
+                            <h5 class="mb-0"><i class="fas fa-user-shield"></i> Lista de Administradores</h5>
+                            <button class="btn btn-light btn-sm" onclick="showAddAdminModal()">
+                                <i class="fas fa-plus"></i> Agregar Admin
+                            </button>
+                        </div>
+                        <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                            <div id="administrators-list">
+                                <div class="text-center">
+                                    <div class="spinner-border text-primary" role="status"></div>
+                                    <p>Cargando administradores...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Información</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Total administradores:</strong> <span id="admin-count">0</span></p>
+                            <hr>
+                            <h6>Permisos de administradores:</h6>
+                            <ul class="small">
+                                <li>Gestionar usuarios y grupos</li>
+                                <li>Ver estadísticas del sistema</li>
+                                <li>Procesar documentos</li>
+                                <li>Acceso completo al bot</li>
+                                <li>Promover/remover otros admins</li>
+                            </ul>
+                            <hr>
+                            <div class="alert alert-warning alert-sm">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>Cuidado:</strong> Los administradores tienen acceso completo al sistema.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Authorized Section -->
+        <div id="authorized" class="section" style="display: none;">
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-users"></i> Usuarios Autorizados</h5>
+                        </div>
+                        <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                            <div id="authorized-users">
+                                <div class="text-center">
+                                    <div class="spinner-border text-success" role="status"></div>
+                                    <p>Cargando usuarios...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-users-cog"></i> Grupos Autorizados</h5>
+                        </div>
+                        <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                            <div id="authorized-groups">
+                                <div class="text-center">
+                                    <div class="spinner-border text-primary" role="status"></div>
+                                    <p>Cargando grupos...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Section -->
+        <div id="pending" class="section" style="display: none;">
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="fas fa-user-clock"></i> Usuarios Pendientes</h5>
+                        </div>
+                        <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                            <div id="pending-users">
+                                <div class="text-center">
+                                    <div class="spinner-border text-warning" role="status"></div>
+                                    <p>Cargando pendientes...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="fas fa-users-slash"></i> Grupos Pendientes</h5>
+                        </div>
+                        <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                            <div id="pending-groups">
+                                <div class="text-center">
+                                    <div class="spinner-border text-warning" role="status"></div>
+                                    <p>Cargando pendientes...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Section -->
+        <div id="logs" class="section" style="display: none;">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-alt"></i> Logs del Sistema</h5>
+                </div>
+                <div class="card-body">
+                    <div class="log-container" id="logs-container">
+                        <div class="text-center text-light">
+                            <div class="spinner-border" role="status"></div>
+                            <p>Cargando logs...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para agregar administrador -->
+    <div class="modal fade" id="addAdminModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-user-shield"></i> Agregar Nuevo Administrador</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addAdminForm">
+                        <div class="mb-3">
+                            <label for="adminId" class="form-label">ID del Remitente</label>
+                            <input type="text" class="form-control" id="adminId" placeholder="Ej: 5219541234567@c.us">
+                            <div class="form-text">Para grupos, debe terminar en @g.us</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="adminName" class="form-label">Nombre del Administrador</label>
+                            <input type="text" class="form-control" id="adminName" placeholder="Ej: Juan Pérez">
+                        </div>
+                        <div class="mb-3">
+                            <label for="adminType" class="form-label">Tipo</label>
+                            <select class="form-select" id="adminType">
+                                <option value="usuario">Usuario</option>
+                                <option value="grupo">Grupo</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-add-admin" onclick="addAdministrator()">
+                        <i class="fas fa-plus"></i> Agregar Administrador
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast for notifications -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="notification-toast" class="toast" role="alert">
+            <div class="toast-header">
+                <strong class="me-auto">Notificación</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toast-message"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentSection = 'dashboard';
+
+        // Función para mostrar secciones
+        function showSection(section) {
+            // Ocultar todas las secciones
+            document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+
+            // Mostrar la sección seleccionada
+            document.getElementById(section).style.display = 'block';
+
+            // Actualizar navegación
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            event.target.classList.add('active');
+
+            currentSection = section;
+
+            // Cargar datos de la sección
+            loadSectionData(section);
+        }
+
+        // Función para cargar datos según la sección
+        function loadSectionData(section) {
+            switch (section) {
+                case 'dashboard':
+                    loadSystemStatus();
+                    loadQuickStats();
+                    loadSystemInfo();
+                    break;
+                case 'statistics':
+                    loadStatistics();
+                    break;
+                case 'administrators':
+                    loadAdministrators();
+                    break;
+                case 'authorized':
+                    loadAuthorized();
+                    break;
+                case 'pending':
+                    loadPending();
+                    break;
+                case 'logs':
+                    loadLogs();
+                    break;
+            }
+        }
+
+        // Función para mostrar notificaciones
+        function showNotification(message, type = 'info') {
+            const toast = document.getElementById('notification-toast');
+            const toastMessage = document.getElementById('toast-message');
+
+            toastMessage.textContent = message;
+            toast.className = `toast ${type === 'error' ? 'text-bg-danger' : 'text-bg-success'}`;
+
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+        }
+
+        // Función para cargar estado del sistema
+        async function loadSystemStatus() {
+            try {
+                const response = await fetch('/admin/api/status');
+                const data = await response.json();
+
+                // Flask status
+                const flaskStatus = data.flask.running;
+                document.getElementById('flask-status').className = `status-indicator ${flaskStatus ? 'status-running' : 'status-stopped'}`;
+                document.getElementById('flask-details').innerHTML = flaskStatus ?
+                    `✅ PID: ${data.flask.pid}<br>RAM: ${data.flask.memory_usage.toFixed(1)}MB` :
+                    '❌ Detenido';
+
+                // WhatsApp status
+                const whatsappStatus = data.whatsapp_bot.running;
+                document.getElementById('whatsapp-status').className = `status-indicator ${whatsappStatus ? 'status-running' : 'status-stopped'}`;
+                document.getElementById('whatsapp-details').innerHTML = whatsappStatus ?
+                    `✅ PID: ${data.whatsapp_bot.pid}<br>RAM: ${data.whatsapp_bot.memory_usage.toFixed(1)}MB` :
+                    '❌ Detenido';
+
+            } catch (error) {
+                console.error('Error loading system status:', error);
+                showNotification('Error al cargar estado del sistema', 'error');
+            }
+        }
+
+        // Función para cargar estadísticas rápidas
+        async function loadQuickStats() {
+            try {
+                const response = await fetch('/admin/api/statistics');
+                const data = await response.json();
+
+                document.getElementById('total-docs').textContent = data.total_documentos;
+                document.getElementById('total-users').textContent = data.total_usuarios;
+
+            } catch (error) {
+                console.error('Error loading quick stats:', error);
+            }
+        }
+
+        // Función para cargar información del sistema
+        async function loadSystemInfo() {
+            try {
+                const response = await fetch('/admin/api/system-info');
+                const data = await response.json();
+
+                // CPU
+                const cpuPercent = data.sistema.cpu_percent;
+                document.getElementById('cpu-bar').style.width = `${cpuPercent}%`;
+                document.getElementById('cpu-text').textContent = `${cpuPercent.toFixed(1)}%`;
+
+                // Memoria
+                const memoryPercent = data.sistema.memory_percent;
+                document.getElementById('memory-bar').style.width = `${memoryPercent}%`;
+                document.getElementById('memory-text').textContent = `${memoryPercent.toFixed(1)}%`;
+
+                // Archivos
+                document.getElementById('auth-users').textContent = data.archivos.usuarios_autorizados;
+                document.getElementById('auth-groups').textContent = data.archivos.grupos_autorizados;
+
+            } catch (error) {
+                console.error('Error loading system info:', error);
+            }
+        }
+
+        // Función para cargar estadísticas detalladas
+        async function loadStatistics() {
+            try {
+                const response = await fetch('/admin/api/statistics');
+                const data = await response.json();
+
+                const tbody = document.getElementById('statistics-table');
+                tbody.innerHTML = '';
+
+                if (data.estadisticas_detalladas.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center">No hay estadísticas disponibles</td></tr>';
+                    return;
+                }
+
+                data.estadisticas_detalladas.forEach((stat, index) => {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${stat.nombre}</td>
+                        <td><span class="badge ${stat.tipo === 'Grupo' ? 'bg-primary' : 'bg-secondary'}">${stat.tipo}</span></td>
+                        <td><span class="badge bg-success">${stat.documentos}</span></td>
+                    `;
+                });
+
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+                document.getElementById('statistics-table').innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error al cargar estadísticas</td></tr>';
+            }
+        }
+
+        // Función para cargar administradores
+        async function loadAdministrators() {
+            try {
+                const response = await fetch('/admin/api/administrators');
+                const data = await response.json();
+
+                const container = document.getElementById('administrators-list');
+                const countElement = document.getElementById('admin-count');
+
+                countElement.textContent = data.total;
+
+                if (data.administradores.length === 0) {
+                    container.innerHTML = '<p class="text-muted text-center">No hay administradores registrados</p>';
+                } else {
+                    container.innerHTML = data.administradores.map(admin => `
+                        <div class="admin-item p-3 mb-2 rounded">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>${admin.nombre}</strong>
+                                    <br><small class="text-muted">${admin.numero_formateado}</small>
+                                    <br><small class="text-muted">Tipo: ${admin.tipo} • Desde: ${new Date(admin.fecha_creacion).toLocaleDateString()}</small>
+                                </div>
+                                <button class="btn btn-remove-admin btn-sm" onclick="removeAdministrator('${admin.id}', '${admin.nombre}')">
+                                    <i class="fas fa-times"></i> Remover
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+            } catch (error) {
+                console.error('Error loading administrators:', error);
+                showNotification('Error al cargar administradores', 'error');
+            }
+        }
+
+        // Función para mostrar modal de agregar administrador
+        function showAddAdminModal() {
+            const modal = new bootstrap.Modal(document.getElementById('addAdminModal'));
+            modal.show();
+        }
+
+        // Función para agregar administrador
+        async function addAdministrator() {
+            const adminId = document.getElementById('adminId').value.trim();
+            const adminName = document.getElementById('adminName').value.trim();
+            const adminType = document.getElementById('adminType').value;
+
+            if (!adminId || !adminName) {
+                showNotification('Por favor completa todos los campos', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/api/add-administrator', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        remitente_id: adminId,
+                        nombre: adminName,
+                        tipo_remitente: adminType
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    loadAdministrators();
+
+                    // Cerrar modal y limpiar formulario
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addAdminModal'));
+                    modal.hide();
+                    document.getElementById('addAdminForm').reset();
+                } else {
+                    showNotification(data.error, 'error');
+                }
+
+            } catch (error) {
+                console.error('Error adding administrator:', error);
+                showNotification('Error al agregar administrador', 'error');
+            }
+        }
+
+        // Función para remover administrador
+        async function removeAdministrator(id, name) {
+            if (!confirm(`¿Estás seguro de remover a ${name} como administrador?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/api/remove-administrator', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ remitente_id: id })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    loadAdministrators();
+                } else {
+                    showNotification(data.error, 'error');
+                }
+
+            } catch (error) {
+                console.error('Error removing administrator:', error);
+                showNotification('Error al remover administrador', 'error');
+            }
+        }
+
+        // Función para cargar autorizados
+
+        async function loadAuthorized() {
+            try {
+                const response = await fetch('/admin/api/authorized');
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Error desconocido');
+                }
+
+                // Usar datos seguros
+                const usuarios = data.usuarios || data.usuarios_autorizados || [];
+                const grupos = data.grupos || data.grupos_autorizados || [];
+
+                console.log('Usuarios cargados:', usuarios.length);
+                console.log('Grupos cargados:', grupos.length);
+
+                // Usuarios autorizados CON controles especiales
+                const usersContainer = document.getElementById('authorized-users');
+                if (usuarios.length === 0) {
+                    usersContainer.innerHTML = '<p class="text-muted text-center">No hay usuarios autorizados</p>';
+                } else {
+                    usersContainer.innerHTML = usuarios.map(user => `
+                <div class="authorized-item p-3 mb-3 rounded">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <strong>${user.nombre || user.id || 'Sin nombre'}</strong>
+                            <br><small class="text-muted">${user.id || 'Sin ID'}</small>
+                            
+                            <!-- CONTROLES ESPECIALES -->
+                            <div class="mt-2">
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label small">Enmarcado:</label>
+                                        <select class="form-select form-select-sm" 
+                                                onchange="updateSpecialConfig('${user.id}', 'enmarcado', this.value)"
+                                                id="enmarcado_${user.id.replace(/[@.]/g, '_')}">
+                                            <option value="false" ${!user.enmarcado_automatico ? 'selected' : ''}>Sin enmarcar</option>
+                                            <option value="true" ${user.enmarcado_automatico ? 'selected' : ''}>Enmarcar</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small">API:</label>
+                                        <select class="form-select form-select-sm" 
+                                                onchange="updateSpecialConfig('${user.id}', 'api', this.value)"
+                                                id="api_${user.id.replace(/[@.]/g, '_')}">
+                                            <option value="false" ${!user.subir_api_automatico ? 'selected' : ''}>No subir a API</option>
+                                            <option value="true" ${user.subir_api_automatico ? 'selected' : ''}>Subir a API</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                ${user.fecha_configuracion ? `<small class="text-muted d-block mt-1">Configurado: ${new Date(user.fecha_configuracion).toLocaleString()}</small>` : ''}
+                            </div>
+                        </div>
+                        <div class="ms-2">
+                            <button class="btn btn-revoke btn-sm" onclick="revokeAuthorization('${user.id}', 'user')">
+                                <i class="fas fa-times"></i> Revocar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+                }
+
+                // Grupos autorizados CON controles especiales
+                const groupsContainer = document.getElementById('authorized-groups');
+                if (grupos.length === 0) {
+                    groupsContainer.innerHTML = '<p class="text-muted text-center">No hay grupos autorizados</p>';
+                } else {
+                    groupsContainer.innerHTML = grupos.map(group => `
+                <div class="authorized-item p-3 mb-3 rounded">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <strong>${group.nombre || group.id || 'Sin nombre'}</strong>
+                            <br><small class="text-muted">${group.participantes || 'N/A'} participantes</small>
+                            <br><small class="text-muted">${group.id || 'Sin ID'}</small>
+                            
+                            <!-- CONTROLES ESPECIALES -->
+                            <div class="mt-2">
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label small">Enmarcado:</label>
+                                        <select class="form-select form-select-sm" 
+                                                onchange="updateSpecialConfig('${group.id}', 'enmarcado', this.value)"
+                                                id="enmarcado_${group.id.replace(/[@.]/g, '_')}">
+                                            <option value="false" ${!group.enmarcado_automatico ? 'selected' : ''}>Sin enmarcar</option>
+                                            <option value="true" ${group.enmarcado_automatico ? 'selected' : ''}>Enmarcar</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small">API:</label>
+                                        <select class="form-select form-select-sm" 
+                                                onchange="updateSpecialConfig('${group.id}', 'api', this.value)"
+                                                id="api_${group.id.replace(/[@.]/g, '_')}">
+                                            <option value="false" ${!group.subir_api_automatico ? 'selected' : ''}>No subir a API</option>
+                                            <option value="true" ${group.subir_api_automatico ? 'selected' : ''}>Subir a API</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                ${group.fecha_configuracion ? `<small class="text-muted d-block mt-1">Configurado: ${new Date(group.fecha_configuracion).toLocaleString()}</small>` : ''}
+                            </div>
+                        </div>
+                        <div class="ms-2">
+                            <button class="btn btn-revoke btn-sm" onclick="revokeAuthorization('${group.id}', 'group')">
+                                <i class="fas fa-times"></i> Revocar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+                }
+
+                console.log('Renderizado completado exitosamente');
+
+            } catch (error) {
+                console.error('ERROR EN loadAuthorized:', error);
+                document.getElementById('authorized-users').innerHTML =
+                    `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                document.getElementById('authorized-groups').innerHTML =
+                    `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                showNotification('Error al cargar autorizados: ' + error.message, 'error');
+            }
+        }
+
+        // AGREGAR ESTA NUEVA FUNCIÓN para actualizar configuración especial
+        async function updateSpecialConfig(remitenteId, tipo, valor) {
+            try {
+                console.log(`Actualizando configuración ${tipo} para ${remitenteId}: ${valor}`);
+
+                // Obtener valores actuales de ambos selects
+                const enmarcadoSelect = document.getElementById(`enmarcado_${remitenteId.replace(/[@.]/g, '_')}`);
+                const apiSelect = document.getElementById(`api_${remitenteId.replace(/[@.]/g, '_')}`);
+
+                if (!enmarcadoSelect || !apiSelect) {
+                    console.error('No se encontraron los elementos select');
+                    return;
+                }
+
+                const enmarcadoValue = enmarcadoSelect.value === 'true';
+                const apiValue = apiSelect.value === 'true';
+
+                // Mostrar indicador de carga
+                const loadingText = tipo === 'enmarcado' ? 'Actualizando enmarcado...' : 'Actualizando API...';
+                showNotification(loadingText, 'info');
+
+                const response = await fetch('/admin/api/update-special-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        remitente_id: remitenteId,
+                        enmarcado_automatico: enmarcadoValue,
+                        subir_api_automatico: apiValue
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    console.log(`Configuración actualizada exitosamente para ${remitenteId}`);
+                } else {
+                    showNotification(data.error || 'Error actualizando configuración', 'error');
+                    // Revertir el cambio en el select
+                    if (tipo === 'enmarcado') {
+                        enmarcadoSelect.value = enmarcadoSelect.value === 'true' ? 'false' : 'true';
+                    } else {
+                        apiSelect.value = apiSelect.value === 'true' ? 'false' : 'true';
+                    }
+                }
+
+            } catch (error) {
+                console.error('Error updating special config:', error);
+                showNotification('Error de conexión al actualizar configuración', 'error');
+
+                // Revertir el cambio en el select
+                const select = document.getElementById(`${tipo}_${remitenteId.replace(/[@.]/g, '_')}`);
+                if (select) {
+                    select.value = select.value === 'true' ? 'false' : 'true';
+                }
+            }
+        }
+
+        async function loadPending() {
+            try {
+                const response = await fetch('/admin/api/pending');
+                const data = await response.json();
+
+                // Usuarios pendientes
+                const usersContainer = document.getElementById('pending-users');
+                if (data.usuarios_pendientes.length === 0) {
+                    usersContainer.innerHTML = '<p class="text-muted text-center">No hay usuarios pendientes</p>';
+                } else {
+                    usersContainer.innerHTML = data.usuarios_pendientes.map(user => `
+                        <div class="pending-item p-3 mb-2 rounded">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>${user.nombre}</strong>
+                                    <br><small class="text-muted">${user.id}</small>
+                                </div>
+                                <button class="btn btn-authorize btn-sm" onclick="authorizeEntity('${user.id}', 'user')">
+                                    <i class="fas fa-check"></i> Autorizar
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                // Grupos pendientes
+                const groupsContainer = document.getElementById('pending-groups');
+                if (data.grupos_pendientes.length === 0) {
+                    groupsContainer.innerHTML = '<p class="text-muted text-center">No hay grupos pendientes</p>';
+                } else {
+                    groupsContainer.innerHTML = data.grupos_pendientes.map(group => `
+                        <div class="pending-item p-3 mb-2 rounded">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>${group.nombre}</strong>
+                                    <br><small class="text-muted">${group.participantes} participantes</small>
+                                    <br><small class="text-muted">${group.id}</small>
+                                </div>
+                                <button class="btn btn-authorize btn-sm" onclick="authorizeEntity('${group.id}', 'group')">
+                                    <i class="fas fa-check"></i> Autorizar
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+            } catch (error) {
+                console.error('Error loading pending:', error);
+                showNotification('Error al cargar pendientes', 'error');
+            }
+        }
+
+        // Función para cargar logs
+        async function loadLogs() {
+            try {
+                const response = await fetch('/admin/api/logs');
+                const data = await response.json();
+
+                const logsContainer = document.getElementById('logs-container');
+
+                if (data.logs.length === 0) {
+                    logsContainer.innerHTML = '<div class="text-center">No hay logs disponibles</div>';
+                    return;
+                }
+
+                logsContainer.innerHTML = data.logs.map(log => `
+                    <div class="log-entry log-${log.type}">
+                        <span class="text-muted">[${log.timestamp}]</span> ${log.message}
+                    </div>
+                `).join('');
+
+                // Scroll al final
+                logsContainer.scrollTop = logsContainer.scrollHeight;
+
+            } catch (error) {
+                console.error('Error loading logs:', error);
+                document.getElementById('logs-container').innerHTML = '<div class="log-error">Error al cargar logs</div>';
+            }
+        }
+
+        // Función para autorizar entidad
+        async function authorizeEntity(id, type) {
+            try {
+                const response = await fetch('/admin/api/authorize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ id, type })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    // Recargar datos
+                    loadPending();
+                    loadAuthorized();
+                } else {
+                    showNotification(data.error, 'error');
+                }
+
+            } catch (error) {
+                console.error('Error authorizing:', error);
+                showNotification('Error al autorizar', 'error');
+            }
+        }
+
+        // Función para revocar autorización
+        async function revokeAuthorization(id, type) {
+            if (!confirm('¿Estás seguro de revocar esta autorización?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/api/revoke', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ id, type })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    // Recargar datos
+                    loadAuthorized();
+                    loadPending();
+                } else {
+                    showNotification(data.error, 'error');
+                }
+
+            } catch (error) {
+                console.error('Error revoking:', error);
+                showNotification('Error al revocar autorización', 'error');
+            }
+        }
+
+        // Función para actualizar todo
+        function refreshAll() {
+            loadSectionData(currentSection);
+            showNotification('Datos actualizados', 'success');
+        }
+
+        // Auto-refresh cada 30 segundos
+        setInterval(() => {
+            if (currentSection === 'dashboard') {
+                loadSystemStatus();
+                loadSystemInfo();
+            }
+        }, 30000);
+
+        // Cargar datos iniciales
+        document.addEventListener('DOMContentLoaded', function () {
+            loadSectionData('dashboard');
+        });
+    </script>
+</body>
+
+</html>
