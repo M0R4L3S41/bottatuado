@@ -708,7 +708,7 @@ async function iniciarServidor() {
 
         console.log('✅ Base de datos conectada para panel admin');
 
-        app.listen(PORT, () => {
+        app.listen(PORT, '0.0.0.0', () => {
             console.log(`🌐 Servidor de administración iniciado en http://localhost:${PORT}`);
             console.log(`📊 Panel admin: http://localhost:${PORT}/admin`);
             console.log(`📋 CURPs pendientes: http://localhost:${PORT}/admin/curp-pendientes`);
@@ -722,5 +722,6 @@ async function iniciarServidor() {
 
 // Iniciar servidor
 iniciarServidor();
+
 
 module.exports = app;
