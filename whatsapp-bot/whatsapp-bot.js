@@ -786,49 +786,55 @@ async function conectarWhatsApp() {
 
 function findChromePath() {
     const possiblePaths = [
+        '/usr/local/bin/google-chrome-stable',
         '/usr/bin/chromium',
-        '/usr/bin/chromium-browser', 
+        '/usr/bin/chromium-browser',
         '/usr/bin/google-chrome-stable',
-        '/usr/bin/google-chrome',
-        process.env.PUPPETEER_EXECUTABLE_PATH
+        '/usr/bin/google-chrome'
     ];
     
-    // En Railway/Nixpacks, buscar en el store de Nix
-    if (process.env.RAILWAY_ENVIRONMENT_NAME) {
-        try {
-            const { execSync } = require('child_process');
-            const nixChrome = execSync('find /nix/store -name chromium -type f 2>/dev/null | head -1', { encoding: 'utf8' }).trim();
-            if (nixChrome) {
-                console.log('🎯 Chrome encontrado en Nix store:', nixChrome);
-                return nixChrome;
-            }
-        } catch (error) {
-            console.log('⚠️ No se pudo buscar en Nix store:', error.message);
-        }
-    }
+    console.log('🔍 Buscando Chrome en el sistema...');
     
-    // Buscar en rutas convencionales
     const fs = require('fs');
     for (const path of possiblePaths) {
-        if (path && fs.existsSync(path)) {
+        if (fs.existsSync(path)) {
             console.log('🎯 Chrome encontrado en:', path);
             return path;
         }
     }
     
-    console.log('⚠️ No se encontró Chrome, usando configuración por defecto');
-    return undefined; // Dejar que Puppeteer use su propia versión
+    // Si estamos en Railway, buscar en Nix store
+    try {
+        const { execSync } = require('child_process');
+        const result = execSync('find /nix/store -name chromium -type f 2>/dev/null | head -1', { encoding: 'utf8' }).trim();
+        if (result) {
+            console.log('🎯 Chrome encontrado en Nix store:', result);
+            return result;
+        }
+    } catch (error) {
+        console.log('⚠️ No se pudo buscar en Nix store');
+    }
+    
+    console.log('❌ No se encontró Chrome en el sistema');
+    throw new Error('Chrome no encontrado - Railway debe instalar Chromium');
 }
 
-// Crear cliente de WhatsApp Web con configuración mejorada
-const chromePath = findChromePath();
+// Crear cliente de WhatsApp Web con ruta fija de Chrome
+let chromePath;
+try {
+    chromePath = findChromePath();
+} catch (error) {
+    console.error('💥 Error fatal:', error.message);
+    process.exit(1);
+}
+
 const client = new Client({
     authStrategy: new LocalAuth({
         dataPath: SESSION_FOLDER
     }),
     puppeteer: {
         headless: true,
-        executablePath: chromePath,
+        executablePath: chromePath, // Usar la ruta encontrada
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -853,7 +859,7 @@ const client = new Client({
             '--disable-backgrounding-occluded-windows',
             '--disable-default-apps'
         ],
-        timeout: 120000 // Aumentar timeout a 2 minutos
+        timeout: 120000
     }
 });
     await cargarGrupos();
@@ -1658,5 +1664,6 @@ const client = new Client({
 // Iniciar la conexión
 
 conectarWhatsApp();
+
 
 
