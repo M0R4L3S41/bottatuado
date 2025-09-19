@@ -1,4 +1,6 @@
 
+# Reemplazar contenido de: whatsapp-bot/Dockerfile
+
 FROM node:18-slim
 
 # Instalar dependencias del sistema necesarias para Puppeteer
@@ -26,9 +28,13 @@ RUN apt-get update && apt-get install -y \
 # Crear directorio de trabajo
 WORKDIR /app
 
-# Copiar package.json e instalar dependencias
+# Instalar dependencias primero (para aprovechar cache de Docker)
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+
+# Limpiar npm cache y instalar dependencias
+RUN npm cache clean --force && \
+    npm install --only=production && \
+    npm cache clean --force
 
 # Copiar código fuente
 COPY . ./
