@@ -785,25 +785,41 @@ async function conectarWhatsApp() {
     }
 
     // Crear cliente de WhatsApp Web
-    const client = new Client({
-        authStrategy: new LocalAuth({
-            dataPath: SESSION_FOLDER
-        }),
-        puppeteer: {
-            headless: true,
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-accelerated-2d-canvas',
-                '--no-first-run',
-                '--no-zygote',
-                '--single-process',
-                '--disable-gpu'
-            ]
-        }
-    });
-
+const client = new Client({
+    authStrategy: new LocalAuth({
+        dataPath: SESSION_FOLDER
+    }),
+    puppeteer: {
+        headless: true,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-gpu',
+            '--disable-extensions',
+            '--disable-plugins',
+            '--disable-images',
+            '--disable-javascript',
+            '--disable-default-apps',
+            '--disable-background-timer-throttling',
+            '--disable-renderer-backgrounding',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-features=TranslateUI',
+            '--disable-ipc-flooding-protection',
+            '--memory-pressure-off',
+            '--max-old-space-size=512',
+            '--disable-web-security',
+            '--disable-features=VizDisplayCompositor'
+        ],
+        timeout: 60000,
+        // AGREGAR ESTA LÍNEA PARA RAILWAY:
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable'
+    }
+});
     await cargarGrupos();
     await recargarAutorizaciones();
     await cargarTodasLasSolicitudes();
@@ -1604,4 +1620,5 @@ async function conectarWhatsApp() {
 }
 
 // Iniciar la conexión
+
 conectarWhatsApp();
