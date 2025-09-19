@@ -1,0 +1,11 @@
+{
+  "name": "whatsapp-bot-railway",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "cd whatsapp-bot && npm install && npm start",
+    "build": "cd whatsapp-bot && npm install"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
