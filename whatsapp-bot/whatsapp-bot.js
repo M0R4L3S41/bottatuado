@@ -803,21 +803,19 @@ const client = new Client({
             '--disable-extensions',
             '--disable-plugins',
             '--disable-images',
-            '--disable-javascript',
-            '--disable-default-apps',
-            '--disable-background-timer-throttling',
-            '--disable-renderer-backgrounding',
-            '--disable-backgrounding-occluded-windows',
+            '--disable-web-security',
             '--disable-features=TranslateUI',
             '--disable-ipc-flooding-protection',
             '--memory-pressure-off',
             '--max-old-space-size=512',
-            '--disable-web-security',
-            '--disable-features=VizDisplayCompositor'
+            '--disable-features=VizDisplayCompositor',
+            '--disable-background-networking',
+            '--disable-background-timer-throttling',
+            '--disable-renderer-backgrounding',
+            '--disable-backgrounding-occluded-windows'
         ],
-        timeout: 60000,
-        // AGREGAR ESTA LÍNEA PARA RAILWAY:
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable'
+        timeout: 90000
+        // NO especificar executablePath - dejar que lo encuentre automáticamente
     }
 });
     await cargarGrupos();
@@ -1622,3 +1620,4 @@ const client = new Client({
 // Iniciar la conexión
 
 conectarWhatsApp();
+
