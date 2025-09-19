@@ -9,32 +9,21 @@ nixPkgs = [
     'ttf-freefont',
     'glib',
     'gtk3',
-    'libdrm',
-    'xorg.libX11',
-    'xorg.libXcomposite',
-    'xorg.libXdamage',
-    'xorg.libXext',
-    'xorg.libXfixes',
-    'xorg.libXrandr',
-    'xorg.libxcb',
-    'mesa',
-    'alsa-lib',
     'atk',
     'cairo',
-    'cups',
-    'dbus',
-    'expat',
-    'fontconfig',
-    'gdk-pixbuf',
-    'pango'
+    'pango',
+    'gdk-pixbuf'
 ]
 
 [phases.install]
-cmds = ['npm ci --only=production']
+cmds = [
+    'npm ci --only=production',
+    'ln -sf /nix/store/*/bin/chromium /usr/local/bin/google-chrome-stable || true'
+]
 
 [start]
 cmd = 'cd whatsapp-bot && npm start'
 
 [variables]
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true'
-PUPPETEER_EXECUTABLE_PATH = '/nix/store/*-chromium-*/bin/chromium'
+PUPPETEER_EXECUTABLE_PATH = '/usr/local/bin/google-chrome-stable'
