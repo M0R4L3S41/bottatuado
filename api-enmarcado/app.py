@@ -7,8 +7,13 @@ from enmarcado import overlay_pdf_on_background
 from io import BytesIO
 import traceback
 from datetime import datetime  # AGREGAR ESTA LÍNEA
+import os
+from flask_cors import CORS
+
 
 app = Flask(__name__)
+CORS(app, origins=['*'])  # Permitir CORS para Railway
+PORT = int(os.environ.get('PORT', 5000))  # Puerto dinámico de Railway
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 @app.route('/api/mensaje_whatsapp', methods=['POST'])
@@ -253,7 +258,7 @@ def root():
     })
 
 if __name__ == '__main__':
-    print("🚀 Iniciando API de enmarcado...")
+    print("🚀 Iniciando API de enmarcado en Railway...")
     print("📂 Verificando archivos necesarios...")
     
     # Verificar archivos de marco
@@ -268,5 +273,5 @@ if __name__ == '__main__':
     else:
         print("❌ Carpeta marcos traseros NO encontrada: static/marcostraceros")
     
-    print("🌐 Servidor iniciando en http://localhost:5000")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    print(f"🌐 Servidor iniciando en puerto {PORT} (Railway)")
+    app.run(host='0.0.0.0', port=PORT, debug=False)
