@@ -784,13 +784,51 @@ async function conectarWhatsApp() {
         process.exit(1);
     }
 
-    // Crear cliente de WhatsApp Web
+function findChromePath() {
+    const possiblePaths = [
+        '/usr/bin/chromium',
+        '/usr/bin/chromium-browser', 
+        '/usr/bin/google-chrome-stable',
+        '/usr/bin/google-chrome',
+        process.env.PUPPETEER_EXECUTABLE_PATH
+    ];
+    
+    // En Railway/Nixpacks, buscar en el store de Nix
+    if (process.env.RAILWAY_ENVIRONMENT_NAME) {
+        try {
+            const { execSync } = require('child_process');
+            const nixChrome = execSync('find /nix/store -name chromium -type f 2>/dev/null | head -1', { encoding: 'utf8' }).trim();
+            if (nixChrome) {
+                console.log('🎯 Chrome encontrado en Nix store:', nixChrome);
+                return nixChrome;
+            }
+        } catch (error) {
+            console.log('⚠️ No se pudo buscar en Nix store:', error.message);
+        }
+    }
+    
+    // Buscar en rutas convencionales
+    const fs = require('fs');
+    for (const path of possiblePaths) {
+        if (path && fs.existsSync(path)) {
+            console.log('🎯 Chrome encontrado en:', path);
+            return path;
+        }
+    }
+    
+    console.log('⚠️ No se encontró Chrome, usando configuración por defecto');
+    return undefined; // Dejar que Puppeteer use su propia versión
+}
+
+// Crear cliente de WhatsApp Web con configuración mejorada
+const chromePath = findChromePath();
 const client = new Client({
     authStrategy: new LocalAuth({
         dataPath: SESSION_FOLDER
     }),
     puppeteer: {
         headless: true,
+        executablePath: chromePath,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -812,10 +850,10 @@ const client = new Client({
             '--disable-background-networking',
             '--disable-background-timer-throttling',
             '--disable-renderer-backgrounding',
-            '--disable-backgrounding-occluded-windows'
+            '--disable-backgrounding-occluded-windows',
+            '--disable-default-apps'
         ],
-        timeout: 90000
-        // NO especificar executablePath - dejar que lo encuentre automáticamente
+        timeout: 120000 // Aumentar timeout a 2 minutos
     }
 });
     await cargarGrupos();
@@ -1620,4 +1658,5 @@ const client = new Client({
 // Iniciar la conexión
 
 conectarWhatsApp();
+
 
