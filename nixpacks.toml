@@ -1,5 +1,33 @@
 [phases.setup]
-nixPkgs = ['nodejs_18', 'chromium', 'nss', 'freetype', 'harfbuzz', 'ca-certificates', 'ttf-freefont']
+nixPkgs = [
+    'nodejs_18',
+    'chromium',
+    'nss',
+    'freetype',
+    'harfbuzz',
+    'ca-certificates',
+    'ttf-freefont',
+    'glib',
+    'gtk3',
+    'libdrm',
+    'xorg.libX11',
+    'xorg.libXcomposite',
+    'xorg.libXdamage',
+    'xorg.libXext',
+    'xorg.libXfixes',
+    'xorg.libXrandr',
+    'xorg.libxcb',
+    'mesa',
+    'alsa-lib',
+    'atk',
+    'cairo',
+    'cups',
+    'dbus',
+    'expat',
+    'fontconfig',
+    'gdk-pixbuf',
+    'pango'
+]
 
 [phases.install]
 cmds = ['npm ci --only=production']
@@ -9,3 +37,4 @@ cmd = 'cd whatsapp-bot && npm start'
 
 [variables]
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true'
+PUPPETEER_EXECUTABLE_PATH = '/nix/store/*-chromium-*/bin/chromium'
